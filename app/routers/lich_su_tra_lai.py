@@ -17,20 +17,14 @@ router = APIRouter(
 )
 
 
-@router.post("", response_model=ApiResponse[LichSuTraLai], status_code=201)
-async def create_lich_su(lich_su: LichSuTraLaiCreate, db: Session = Depends(get_db)):
-    """Create a new payment history record"""
-    # Verify that MaHD exists in either TinChap or TraGop
-    tin_chap = db.query(TinChap).filter(TinChap.MaHD == lich_su.MaHD).first()
-    tra_gop = db.query(TraGop).filter(TraGop.MaHD == lich_su.MaHD).first()
-    
-    if not tin_chap and not tra_gop:
-        raise HTTPException(status_code=404, detail=f"Không tìm thấy hợp đồng {lich_su.MaHD}")
-    
-    result = crud_lich_su.create_lich_su(db=db, lich_su=lich_su)
-    # Convert SQLAlchemy model to Pydantic schema
-    lich_su_response = LichSuTraLai.model_validate(result)
-    return ApiResponse.success_response(data=lich_su_response, message="Tạo lịch sử trả lãi thành công")
+@router.post("", response_model=ApiResponse[Any], status_code=201)
+async def create_lich_su( 
+    db: Session = Depends(get_db),
+    ma_hd: str = ""
+):
+    """Create payment history records for a contract"""
+    result = crud_lich_su.create_lich_su(db=db, ma_hd=ma_hd)
+    return ApiResponse.success_response(data=result, message="Tạo lịch sử trả lãi thành công")
 
 
 @router.get("", response_model=ApiResponse[List[LichSuTraLai]])

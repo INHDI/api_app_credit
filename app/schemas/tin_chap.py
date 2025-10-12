@@ -11,8 +11,8 @@ class TinChapCreate(BaseModel):
     HoTen: str = Field(..., description="Họ tên người vay")
     NgayVay: date = Field(..., description="Ngày vay")
     SoTienVay: int = Field(..., gt=0, description="Số tiền vay")
-    KyDong: int = Field(..., gt=0, description="Kỳ đóng (tháng)")
-    LaiSuat: int = Field(..., ge=0, description="Lãi suất (số tiền cố định, ví dụ: 10 đồng)")
+    KyDong: int = Field(..., gt=0, description="Kỳ đóng (số ngày giữa các kỳ thanh toán)")
+    LaiSuat: int = Field(..., ge=0, description="Lãi suất (số tiền cố định mỗi kỳ, VNĐ)")
 
 
 class TinChapUpdate(BaseModel):
@@ -31,8 +31,8 @@ class TinChap(BaseModel):
     HoTen: str = Field(..., description="Họ tên người vay")
     NgayVay: date = Field(..., description="Ngày vay")
     SoTienVay: int = Field(..., description="Số tiền vay")
-    KyDong: int = Field(..., description="Kỳ đóng (tháng)")
-    LaiSuat: int = Field(..., description="Lãi suất (số tiền cố định)")
+    KyDong: int = Field(..., description="Kỳ đóng (số ngày giữa các kỳ thanh toán)")
+    LaiSuat: int = Field(..., description="Lãi suất (số tiền cố định mỗi kỳ, VNĐ)")
     TrangThai: str = Field(..., description="Trạng thái")
     
     model_config = ConfigDict(from_attributes=True)

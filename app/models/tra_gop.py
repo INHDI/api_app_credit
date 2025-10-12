@@ -16,8 +16,8 @@ class TraGop(Base):
     HoTen = Column(String, nullable=False)
     NgayVay = Column(Date, nullable=False, default=datetime.date.today)
     SoTienVay = Column(Integer, nullable=False)
-    KyDong = Column(Integer, nullable=False)  # Payment period (months)
-    SoLanTra = Column(Integer, nullable=False, default=0)  # Number of payments made
+    KyDong = Column(Integer, nullable=False)  # Payment period (days) - Số ngày giữa các kỳ thanh toán
+    SoLanTra = Column(Integer, nullable=False, default=0)  # Number of times to pay - Tổng số lần phải trả
     LaiSuat = Column(Integer, nullable=False)  # Fixed interest amount (VNĐ)
     TrangThai = Column(String, nullable=False)  # Status
 

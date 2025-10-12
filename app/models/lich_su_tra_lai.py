@@ -18,7 +18,7 @@ class LichSuTraLai(Base):
     SoTien = Column(Integer, nullable=False)
     NoiDung = Column(String, nullable=True)
     TrangThai = Column(String, nullable=False)
-    TienDaTra = Column(String, nullable=False)  # Total amount paid so far
+    TienDaTra = Column(Integer, nullable=False)  # Total amount paid so far
 
     def __repr__(self):
         return f"<LichSuTraLai(Stt={self.Stt}, MaHD='{self.MaHD}', SoTien={self.SoTien})>"

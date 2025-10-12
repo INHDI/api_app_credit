@@ -13,7 +13,7 @@ class LichSuTraLaiBase(BaseModel):
     SoTien: int = Field(..., gt=0, description="Số tiền trả")
     NoiDung: Optional[str] = Field(None, description="Nội dung")
     TrangThai: str = Field(..., description="Trạng thái")
-    TienDaTra: str = Field(..., description="Tổng tiền đã trả")
+    TienDaTra: int = Field(..., description="Tổng tiền đã trả")
 
 
 class LichSuTraLaiCreate(LichSuTraLaiBase):
@@ -28,7 +28,7 @@ class LichSuTraLaiUpdate(BaseModel):
     SoTien: Optional[int] = None
     NoiDung: Optional[str] = None
     TrangThai: Optional[str] = None
-    TienDaTra: Optional[str] = None
+    TienDaTra: Optional[int] = None
 
 
 class LichSuTraLai(BaseModel):
@@ -39,6 +39,6 @@ class LichSuTraLai(BaseModel):
     SoTien: int = Field(..., description="Số tiền trả")
     NoiDung: Optional[str] = Field(None, description="Nội dung")
     TrangThai: str = Field(..., description="Trạng thái")
-    TienDaTra: str = Field(..., description="Tổng tiền đã trả")
+    TienDaTra: int = Field(..., description="Tổng tiền đã trả")
     
     model_config = ConfigDict(from_attributes=True)

@@ -11,9 +11,9 @@ class TraGopBase(BaseModel):
     HoTen: str = Field(..., description="Họ tên người vay")
     NgayVay: date = Field(..., description="Ngày vay")
     SoTienVay: int = Field(..., gt=0, description="Số tiền vay")
-    KyDong: int = Field(..., gt=0, description="Kỳ đóng (tháng)")
-    SoLanTra: int = Field(default=0, ge=0, description="Số lần đã trả")
-    LaiSuat: int = Field(..., ge=0, description="Lãi suất (số tiền cố định, ví dụ: 10 đồng)")
+    KyDong: int = Field(..., gt=0, description="Kỳ đóng (số ngày giữa các kỳ thanh toán)")
+    SoLanTra: int = Field(default=0, ge=0, description="Tổng số lần phải trả")
+    LaiSuat: int = Field(..., ge=0, description="Lãi suất (tổng lãi cả kỳ hạn, VNĐ)")
     TrangThai: str = Field(..., description="Trạng thái")
 
 
@@ -39,9 +39,9 @@ class TraGop(BaseModel):
     HoTen: str = Field(..., description="Họ tên người vay")
     NgayVay: date = Field(..., description="Ngày vay")
     SoTienVay: int = Field(..., description="Số tiền vay")
-    KyDong: int = Field(..., description="Kỳ đóng (tháng)")
-    SoLanTra: int = Field(..., description="Số lần đã trả")
-    LaiSuat: int = Field(..., description="Lãi suất (số tiền cố định)")
+    KyDong: int = Field(..., description="Kỳ đóng (số ngày giữa các kỳ thanh toán)")
+    SoLanTra: int = Field(..., description="Tổng số lần phải trả")
+    LaiSuat: int = Field(..., description="Lãi suất (tổng lãi cả kỳ hạn, VNĐ)")
     TrangThai: str = Field(..., description="Trạng thái")
     
     model_config = ConfigDict(from_attributes=True)
