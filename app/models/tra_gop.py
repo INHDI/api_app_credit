@@ -19,8 +19,5 @@ class TraGop(Base):
     KyDong = Column(Integer, nullable=False)  # Payment period (days) - Số ngày giữa các kỳ thanh toán
     SoLanTra = Column(Integer, nullable=False, default=0)  # Number of times to pay - Tổng số lần phải trả
     LaiSuat = Column(Integer, nullable=False)  # Fixed interest amount (VNĐ)
-    TrangThai = Column(String, nullable=False)  # Status
-
-    def __repr__(self):
-        return f"<TraGop(MaHD='{self.MaHD}', HoTen='{self.HoTen}', SoTienVay={self.SoTienVay})>"
+    TrangThai = Column(String, nullable=False)  # [TrangThaiThanhToan, TrangThaiNgayThanhToan]
 

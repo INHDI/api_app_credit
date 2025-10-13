@@ -18,8 +18,9 @@ class TinChap(Base):
     SoTienVay = Column(Integer, nullable=False)
     KyDong = Column(Integer, nullable=False)  # Payment period (days) - Số ngày giữa các kỳ thanh toán
     LaiSuat = Column(Integer, nullable=False)  # Fixed interest amount (VNĐ)
-    TrangThai = Column(String, nullable=False)  # Status
+    SoTienTraGoc = Column(Integer, nullable=True, default=0)  # Số tiền trả gốc (nếu cần cho tất toán)
+    TrangThai = Column(String, nullable=False)  # [TrangThaiThanhToan, TrangThaiNgayThanhToan]
 
-    def __repr__(self):
-        return f"<TinChap(MaHD='{self.MaHD}', HoTen='{self.HoTen}', SoTienVay={self.SoTienVay})>"
+    # def __repr__(self):
+    #     return f"<TinChap(MaHD='{self.MaHD}', HoTen='{self.HoTen}', SoTienVay={self.SoTienVay})>"
 

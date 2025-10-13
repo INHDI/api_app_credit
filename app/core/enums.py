@@ -9,10 +9,20 @@ class TrangThaiThanhToan(str, Enum):
     CHUA_THANH_TOAN = "Chưa thanh toán"
     DONG_DU = "Đóng đủ"
     THANH_TOAN_MOT_PHAN = "Thanh toán một phần"
-    DEN_HAN_TRA_LAI = "Đến hạn trả lãi"
-    QUA_HAN_TRA_LAI = "Quá hạn trả lãi"
     DA_TAT_TOAN = "Đã tất toán"
     
+    @classmethod
+    def list_values(cls):
+        """Trả về danh sách tất cả các giá trị"""
+        return [status.value for status in cls]
+
+
+class TrangThaiNgayThanhToan(str, Enum):
+    """Trạng thái ngày thanh toán"""
+    CHUA_DEN_HAN = "Chưa đến hạn"
+    DEN_HAN = "Đến hạn"
+    QUA_HAN = "Quá hạn"
+
     @classmethod
     def list_values(cls):
         """Trả về danh sách tất cả các giá trị"""
@@ -21,5 +31,6 @@ class TrangThaiThanhToan(str, Enum):
 # Export all enums
 __all__ = [
     "TrangThaiThanhToan", 
+    "TrangThaiNgayThanhToan",
 ]
 

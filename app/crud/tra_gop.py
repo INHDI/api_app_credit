@@ -4,6 +4,7 @@ CRUD operations for TraGop
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
+from app.core.enums import TrangThaiThanhToan
 from app.models.tra_gop import TraGop
 from app.schemas.tra_gop import TraGopCreate, TraGopUpdate
 
@@ -49,6 +50,7 @@ def create_tra_gop(db: Session, tra_gop: TraGopCreate, ma_hd: str) -> TraGop:
     Returns:
         Created TraGop object
     """
+    trang_thai = TrangThaiThanhToan.CHUA_THANH_TOAN.value
     db_tra_gop = TraGop(
         MaHD=ma_hd,
         HoTen=tra_gop.HoTen,
@@ -57,7 +59,7 @@ def create_tra_gop(db: Session, tra_gop: TraGopCreate, ma_hd: str) -> TraGop:
         KyDong=tra_gop.KyDong,
         SoLanTra=tra_gop.SoLanTra,
         LaiSuat=tra_gop.LaiSuat,
-        TrangThai=tra_gop.TrangThai
+        TrangThai=trang_thai
     )
     
     db.add(db_tra_gop)

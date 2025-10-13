@@ -17,7 +17,8 @@ class LichSuTraLai(Base):
     Ngay = Column(Date, nullable=False, default=datetime.date.today)
     SoTien = Column(Integer, nullable=False)
     NoiDung = Column(String, nullable=True)
-    TrangThai = Column(String, nullable=False)
+    TrangThaiThanhToan = Column(String, nullable=False)  # Trạng thái thanh toán
+    TrangThaiNgayThanhToan = Column(String, nullable=False)  # Trạng thái ngày thanh toán
     TienDaTra = Column(Integer, nullable=False)  # Total amount paid so far
 
     def __repr__(self):
