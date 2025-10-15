@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from typing import List, Any
 
 from app.core.database import get_db
-from app.schemas.tin_chap import TinChapCreate, TinChapUpdate, TinChap
+from app.schemas.tin_chap import TinChapCreate, TinChapResponse, TinChapUpdate, TinChap
 from app.schemas.response import ApiResponse
 from app.crud import tin_chap as crud_tin_chap
 from app.utils.id_generator import generate_tin_chap_id
@@ -27,28 +27,38 @@ async def create_tin_chap(tin_chap: TinChapCreate, db: Session = Depends(get_db)
     return ApiResponse.success_response(data=tin_chap_response, message="Tạo hợp đồng tín chấp thành công")
 
 
-@router.get("", response_model=ApiResponse[List[TinChap]])
+@router.get("", response_model=ApiResponse[List[TinChapResponse]])
 async def get_all_tin_chap(
-    skip: int = 0, 
-    limit: int = 100, 
+    status: str | None = None,
+    page: int = 1,
+    page_size: int = 10,
+    search: str | None = None,
+    sort_by: str = "NgayVay",
+    sort_dir: str = "desc",
+    today_only: bool = False,
     db: Session = Depends(get_db)
     ):
-    """Get all TinChap contracts"""
-    result = crud_tin_chap.get_tin_chaps(db=db, skip=skip, limit=limit)
-    # Convert list of SQLAlchemy models to Pydantic schemas
-    tin_chaps_response = [TinChap.model_validate(tc) for tc in result]
-    return ApiResponse.success_response(data=tin_chaps_response, message="Lấy danh sách hợp đồng tín chấp thành công")
+    """Get all TinChap contracts with filter/search/sort/pagination"""
+    result = crud_tin_chap.get_tin_chaps(
+        db=db,
+        status=status,
+        page=page,
+        page_size=page_size,
+        search=search,
+        sort_by=sort_by,
+        sort_dir=sort_dir,
+        today_only=today_only,
+    )
+    return ApiResponse.success_response(data=result, message="Lấy danh sách hợp đồng tín chấp thành công")
 
 
-@router.get("/{ma_hd}", response_model=ApiResponse[TinChap])
+@router.get("/{ma_hd}", response_model=ApiResponse[TinChapResponse])
 async def get_tin_chap_by_id(ma_hd: str, db: Session = Depends(get_db)):
     """Get a specific TinChap contract by MaHD"""
-    tin_chap = crud_tin_chap.get_tin_chap(db=db, ma_hd=ma_hd)
+    tin_chap = crud_tin_chap.get_tin_chap_with_history(db=db, ma_hd=ma_hd)
     if not tin_chap:
         raise HTTPException(status_code=404, detail="Không tìm thấy hợp đồng tín chấp")
-    # Convert SQLAlchemy model to Pydantic schema
-    tin_chap_response = TinChap.model_validate(tin_chap)
-    return ApiResponse.success_response(data=tin_chap_response, message="Lấy thông tin hợp đồng tín chấp thành công")
+    return ApiResponse.success_response(data=tin_chap, message="Lấy thông tin hợp đồng tín chấp thành công")
 
 
 @router.put("/{ma_hd}", response_model=ApiResponse[TinChap])

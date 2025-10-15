@@ -471,40 +471,61 @@ def auto_create_lich_su(db: Session) -> dict:
 
 def pay_lich_su(db: Session, stt: int, so_tien: int) -> dict:
     """
-    Thanh toán lịch sử trả lãi
-    
-    Args:
-        db: Database session
-        stt: Record ID
-        so_tien: Amount to pay
-        
-    Returns:
-        dict: Thông tin kết quả xử lý
+    Thanh toán lịch sử trả lãi theo chuẩn logic:
+    - Chỉ cho phép thanh toán kỳ "Đến hạn" (DEN_HAN)
+    - Không cho phép trả vượt quá số tiền còn lại của kỳ
+    - Cập nhật trạng thái kỳ: DONG_DU hoặc THANH_TOAN_MOT_PHAN
+    - Cập nhật trạng thái HĐ: nếu còn kỳ chưa trả đủ => THANH_TOAN_MOT_PHAN; nếu tất cả đã đủ => DA_TAT_TOAN
     """
+    if so_tien <= 0:
+        raise HTTPException(status_code=400, detail="Số tiền thanh toán phải > 0")
+
     db_lich_su = get_lich_su(db, stt)
-    
     if not db_lich_su:
-        return False
+        raise HTTPException(status_code=404, detail="Không tìm thấy bản ghi lịch sử")
     if db_lich_su.TrangThaiNgayThanhToan != TrangThaiNgayThanhToan.DEN_HAN.value:
-        return False
-    
-    db_lich_su.TienDaTra += so_tien
+        raise HTTPException(status_code=400, detail="Chỉ được thanh toán kỳ đến hạn")
+
+    con_lai_ky = max(0, db_lich_su.SoTien - db_lich_su.TienDaTra)
+    if con_lai_ky == 0:
+        raise HTTPException(status_code=400, detail="Kỳ này đã thanh toán đủ")
+
+    thanh_toan_thuc_te = min(so_tien, con_lai_ky)
+    db_lich_su.TienDaTra += thanh_toan_thuc_te
     if db_lich_su.TienDaTra >= db_lich_su.SoTien:
         db_lich_su.TrangThaiThanhToan = TrangThaiThanhToan.DONG_DU.value
     else:
         db_lich_su.TrangThaiThanhToan = TrangThaiThanhToan.THANH_TOAN_MOT_PHAN.value
+
     ma_hd = db_lich_su.MaHD
+    # Cập nhật trạng thái hợp đồng dựa trên tổng còn nợ trong lịch sử
+    any_unpaid = db.query(LichSuTraLai).filter(
+        LichSuTraLai.MaHD == ma_hd,
+        LichSuTraLai.SoTien > LichSuTraLai.TienDaTra
+    ).first() is not None
+
     if "TG" in ma_hd:
         contract = db.query(TraGop).filter(TraGop.MaHD == ma_hd).first()
-        if contract.SoLanTra == contract.SoLanTra:
-            contract.TrangThai = TrangThaiThanhToan.THANH_TOAN_MOT_PHAN.value
     else:
         contract = db.query(TinChap).filter(TinChap.MaHD == ma_hd).first()
-        if contract.SoLanTra == contract.SoLanTra:
-            contract.TrangThai = TrangThaiThanhToan.THANH_TOAN_MOT_PHAN.value
+
+    if contract:
+        contract.TrangThai = (
+            TrangThaiThanhToan.THANH_TOAN_MOT_PHAN.value if any_unpaid else TrangThaiThanhToan.DA_TAT_TOAN.value
+        )
+
     db.commit()
-    
-    return True
+
+    return {
+        "success": True,
+        "ma_hd": ma_hd,
+        "stt": stt,
+        "da_thanh_toan": thanh_toan_thuc_te,
+        "so_tien_da_tra_ky": db_lich_su.TienDaTra,
+        "so_tien_ky": db_lich_su.SoTien,
+        "trang_thai_thanh_toan_ky": db_lich_su.TrangThaiThanhToan,
+        "trang_thai_hop_dong": contract.TrangThai if contract else None,
+    }
 
 
 def tat_toan_hop_dong(db: Session, ma_hd: str) -> dict:

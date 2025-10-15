@@ -3,7 +3,7 @@ TinChap schemas for API request/response validation
 """
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import date
-from typing import Optional
+from typing import Optional, List, Any
 
 
 class TinChapCreate(BaseModel):
@@ -34,5 +34,23 @@ class TinChap(BaseModel):
     KyDong: int = Field(..., description="Kỳ đóng (số ngày giữa các kỳ thanh toán)")
     LaiSuat: int = Field(..., description="Lãi suất (số tiền cố định mỗi kỳ, VNĐ)")
     TrangThai: str = Field(..., description="Trạng thái")
-    
+    SoTienTraGoc: int = Field(..., description="Số tiền trả gốc")
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TinChapResponse(BaseModel):
+    """Schema for TinChap response"""
+    MaHD: str = Field(..., description="Mã hợp đồng")
+    HoTen: str = Field(..., description="Họ tên người vay")
+    NgayVay: date = Field(..., description="Ngày vay")
+    SoTienVay: int = Field(..., description="Số tiền vay")
+    KyDong: int = Field(..., description="Kỳ đóng (số ngày giữa các kỳ thanh toán)")
+    LaiSuat: int = Field(..., description="Lãi suất (số tiền cố định mỗi kỳ, VNĐ)")
+    SoTienTraGoc: int = Field(..., description="Số tiền trả gốc")
+    TrangThai: str = Field(..., description="Trạng thái")
+    LichSuTraLai: List[Any] = Field(..., description="Lịch sử trả lãi")
+    LaiDaTra: int = Field(..., description="Lãi đã trả")
+    GocConLai: int = Field(..., description="Gốc còn lại")
+    LaiConLai: int = Field(..., description="Lãi còn lại")
+
     model_config = ConfigDict(from_attributes=True)

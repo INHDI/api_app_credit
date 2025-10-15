@@ -2,11 +2,15 @@
 CRUD operations for TraGop
 """
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import List, Optional
+from datetime import date
 
 from app.core.enums import TrangThaiThanhToan
 from app.models.tra_gop import TraGop
-from app.schemas.tra_gop import TraGopCreate, TraGopUpdate
+from app.models.lich_su_tra_lai import LichSuTraLai
+from app.schemas.tra_gop import TraGopCreate, TraGopUpdate, TraGopResponse
+from app.schemas.lich_su_tra_lai import LichSuTraLai as LichSuTraLaiSchema
 
 
 def get_tra_gop(db: Session, ma_hd: str) -> Optional[TraGop]:
@@ -23,19 +27,106 @@ def get_tra_gop(db: Session, ma_hd: str) -> Optional[TraGop]:
     return db.query(TraGop).filter(TraGop.MaHD == ma_hd).first()
 
 
-def get_tra_gops(db: Session, skip: int = 0, limit: int = 100) -> List[TraGop]:
+def _calculate_tg_payment_info(db: Session, ma_hd: str) -> dict:
+    """Calculate total paid and remaining for TraGop from lịch sử."""
+    histories = db.query(LichSuTraLai).filter(LichSuTraLai.MaHD == ma_hd).all()
+    da_thanh_toan = sum(h.TienDaTra for h in histories)
+    tong_phai_tra = sum(h.SoTien for h in histories)
+    con_lai = max(0, tong_phai_tra - da_thanh_toan)
+    return {"da_thanh_toan": da_thanh_toan, "con_lai": con_lai}
+
+
+def get_tra_gops(
+    db: Session,
+    status: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 10,
+    search: Optional[str] = None,
+    sort_by: str = "NgayVay",
+    sort_dir: str = "desc",
+    today_only: bool = False,
+) -> List[TraGopResponse]:
     """
-    Get all TraGop contracts with pagination
-    
-    Args:
-        db: Database session
-        skip: Number of records to skip
-        limit: Maximum number of records to return
-        
-    Returns:
-        List of TraGop objects
+    Get TraGop contracts with filter/search/sort/pagination and enrich with lịch sử + totals.
     """
-    return db.query(TraGop).offset(skip).limit(limit).all()
+    query = db.query(TraGop)
+
+    if status:
+        query = query.filter(TraGop.TrangThai == status)
+
+    if search:
+        like = f"%{search}%"
+        query = query.filter(or_(TraGop.HoTen.ilike(like), TraGop.MaHD.ilike(like)))
+
+    if today_only:
+        query = query.filter(TraGop.NgayVay == date.today())
+
+    allowed_sort_fields = {
+        "MaHD": TraGop.MaHD,
+        "HoTen": TraGop.HoTen,
+        "NgayVay": TraGop.NgayVay,
+        "SoTienVay": TraGop.SoTienVay,
+        "KyDong": TraGop.KyDong,
+        "SoLanTra": TraGop.SoLanTra,
+        "LaiSuat": TraGop.LaiSuat,
+        "TrangThai": TraGop.TrangThai,
+    }
+    sort_column = allowed_sort_fields.get(sort_by, TraGop.NgayVay)
+    if sort_dir.lower() == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+
+    page = max(1, page)
+    page_size = max(1, page_size)
+    offset = (page - 1) * page_size
+    tra_gops = query.offset(offset).limit(page_size).all()
+
+    results: List[TraGopResponse] = []
+    for tg in tra_gops:
+        histories = db.query(LichSuTraLai).filter(LichSuTraLai.MaHD == tg.MaHD).all()
+        histories_schema = [LichSuTraLaiSchema.model_validate(h).model_dump() for h in histories]
+        totals = _calculate_tg_payment_info(db, tg.MaHD)
+        results.append(
+            TraGopResponse(
+                MaHD=tg.MaHD,
+                HoTen=tg.HoTen,
+                NgayVay=tg.NgayVay,
+                SoTienVay=tg.SoTienVay,
+                KyDong=tg.KyDong,
+                SoLanTra=tg.SoLanTra,
+                LaiSuat=tg.LaiSuat,
+                TrangThai=tg.TrangThai,
+                LichSuTraLai=histories_schema,
+                DaThanhToan=totals["da_thanh_toan"],
+                ConLai=totals["con_lai"],
+            )
+        )
+
+    return results
+
+
+def get_tra_gop_with_history(db: Session, ma_hd: str) -> Optional[TraGopResponse]:
+    """Get a single TraGop enriched with lịch sử + totals."""
+    tg = db.query(TraGop).filter(TraGop.MaHD == ma_hd).first()
+    if not tg:
+        return None
+    histories = db.query(LichSuTraLai).filter(LichSuTraLai.MaHD == tg.MaHD).all()
+    histories_schema = [LichSuTraLaiSchema.model_validate(h).model_dump() for h in histories]
+    totals = _calculate_tg_payment_info(db, tg.MaHD)
+    return TraGopResponse(
+        MaHD=tg.MaHD,
+        HoTen=tg.HoTen,
+        NgayVay=tg.NgayVay,
+        SoTienVay=tg.SoTienVay,
+        KyDong=tg.KyDong,
+        SoLanTra=tg.SoLanTra,
+        LaiSuat=tg.LaiSuat,
+        TrangThai=tg.TrangThai,
+        LichSuTraLai=histories_schema,
+        DaThanhToan=totals["da_thanh_toan"],
+        ConLai=totals["con_lai"],
+    )
 
 
 def create_tra_gop(db: Session, tra_gop: TraGopCreate, ma_hd: str) -> TraGop:
