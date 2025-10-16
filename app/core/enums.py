@@ -29,9 +29,23 @@ class TrangThaiNgayThanhToan(str, Enum):
         """Trả về danh sách tất cả các giá trị"""
         return [status.value for status in cls]
 
+
+class TimePeriod(str, Enum):
+    """Mốc thời gian cho dashboard"""
+    ALL = "all"
+    THIS_MONTH = "this_month"
+    THIS_QUARTER = "this_quarter"
+    THIS_YEAR = "this_year"
+
+    @classmethod
+    def list_values(cls):
+        """Trả về danh sách tất cả các giá trị"""
+        return [period.value for period in cls]
+
 # Export all enums
 __all__ = [
     "TrangThaiThanhToan", 
     "TrangThaiNgayThanhToan",
+    "TimePeriod",
 ]
 

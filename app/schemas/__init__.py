@@ -14,6 +14,11 @@ from app.schemas.lich_su_tra_lai import (
     LichSuTraLaiUpdate
 )
 from app.schemas.response import ApiResponse
+from app.schemas.dashboard import (
+    DashboardResponse,
+    TiLeLaiThu,
+    TiLeLoiNhuan
+)
 
 __all__ = [
     # TinChap
@@ -27,5 +32,9 @@ __all__ = [
     "LichSuTraLaiUpdate",
     # Response
     "ApiResponse",
+    # Dashboard
+    "DashboardResponse",
+    "TiLeLaiThu",
+    "TiLeLoiNhuan",
 ]
 
