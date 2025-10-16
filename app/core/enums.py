@@ -22,6 +22,7 @@ class TrangThaiNgayThanhToan(str, Enum):
     CHUA_DEN_HAN = "Chưa đến hạn"
     DEN_HAN = "Đến hạn"
     QUA_HAN = "Quá hạn"
+    QUA_KY_DONG_LAI = "Quá kỳ đóng lãi"
 
     @classmethod
     def list_values(cls):

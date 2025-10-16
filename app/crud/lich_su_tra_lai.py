@@ -349,7 +349,7 @@ def auto_create_lich_su(db: Session) -> dict:
     try:
         # date_now = date.today()
         # test với ngày 13/10/2025
-        date_now = date(2025, 10, 16)
+        date_now = date(2025, 10, 17)
         contracts_processed = 0
         records_created = 0
         records_updated = 0
@@ -452,6 +452,61 @@ def auto_create_lich_su(db: Session) -> dict:
                 check_ngay_dong_lai.NoiDung = f"Trả lãi kỳ {ky_so} (cộng dồn {tong_tien_chua_tra})"
             
             records_updated += 1
+        
+        # 4.1. Xử lý Trả Góp - Tạo kỳ mới khi quá hạn
+        for contract in tra_gop_contracts:
+            ma_hd = contract.MaHD
+            # Kiểm tra hôm nay có phải là ngày đóng lãi không
+            ky_dong = contract.KyDong
+            if (date_now.day - contract.NgayVay.day) % ky_dong != 0:
+                print(ma_hd)
+                continue
+            
+            # Kiểm tra đã có lịch sử cho ngày hôm nay chưa
+            existing_today = db.query(LichSuTraLai).filter(
+                LichSuTraLai.MaHD == ma_hd,
+                LichSuTraLai.Ngay == date_now
+            ).first()
+            
+            if existing_today:
+                continue  # Đã có lịch sử cho hôm nay, bỏ qua
+            
+            # Tính số tiền cộng dồn từ tất cả các kỳ chưa trả
+            tong_tien_chua_tra = 0
+            lich_sus_chua_tra = db.query(LichSuTraLai).filter(
+                LichSuTraLai.MaHD == ma_hd,
+                LichSuTraLai.SoTien > LichSuTraLai.TienDaTra,
+                LichSuTraLai.SoTien != 0
+            ).all()
+            
+            # Cập nhật tất cả các kỳ cũ: SoTien = 0, TrangThaiNgayThanhToan = QUA_HAN
+            for ls in lich_sus_chua_tra:
+                # Tính số tiền chưa trả TRƯỚC KHI set SoTien = 0
+                so_tien_chua_tra = ls.SoTien - ls.TienDaTra
+                if so_tien_chua_tra > 0:  # Chỉ cộng dồn nếu thực sự chưa trả đủ
+                    tong_tien_chua_tra += so_tien_chua_tra
+                # Sau đó mới set SoTien = 0
+                ls.SoTien = 0
+                ls.TrangThaiNgayThanhToan = TrangThaiNgayThanhToan.QUA_HAN.value
+                # Cập nhật NoiDung để bỏ phần cộng dồn
+                if "kỳ" in ls.NoiDung:
+                    ky_so = ls.NoiDung.split("kỳ ")[1].split(" ")[0]
+                    ls.NoiDung = f"Trả lãi kỳ {ky_so}"
+
+            # Tạo bản ghi mới cho hôm nay
+            so_tien_ky_moi = so_tien_chua_tra
+            
+            db_lich_su = LichSuTraLai(
+                MaHD=ma_hd,
+                Ngay=date_now,
+                SoTien=so_tien_ky_moi,
+                NoiDung=f"Trả lãi kỳ {len(lich_sus_chua_tra) + 1} (cộng dồn {tong_tien_chua_tra})",
+                TrangThaiThanhToan=TrangThaiThanhToan.CHUA_THANH_TOAN.value,
+                TrangThaiNgayThanhToan=TrangThaiNgayThanhToan.DEN_HAN.value,
+                TienDaTra=0
+            )
+            db.add(db_lich_su)
+            records_created += 1
         
         # 5. Commit tất cả thay đổi
         db.commit()
