@@ -80,3 +80,13 @@ async def delete_tin_chap(ma_hd: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Không tìm thấy hợp đồng tín chấp")
     return ApiResponse.success_response(data={"MaHD": ma_hd}, message="Xóa hợp đồng tín chấp thành công")
 
+@router.put("/tra-goc/{ma_hd}", response_model=ApiResponse[Any])
+async def tra_goc_tin_chap(
+    ma_hd: str, 
+    so_tien_tra_goc: int,
+    db: Session = Depends(get_db)):
+    """Trả gốc hợp đồng tín chấp"""
+    success = crud_tin_chap.tra_goc_tin_chap(db=db, ma_hd=ma_hd, so_tien_tra_goc=so_tien_tra_goc)
+    if not success:
+        raise HTTPException(status_code=404, detail="Không tìm thấy hợp đồng tín chấp")
+    return ApiResponse.success_response(data={"MaHD": ma_hd}, message="Trả gốc hợp đồng tín chấp thành công")

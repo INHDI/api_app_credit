@@ -319,3 +319,34 @@ def count_tin_chaps(db: Session) -> int:
     except Exception as e:
         raise
 
+def tra_goc_tin_chap(db: Session, ma_hd: str, so_tien_tra_goc: int) -> bool:
+    """
+    Trả gốc hợp đồng tín chấp
+    
+    Args:
+        db: Database session
+        ma_hd: Contract ID
+        so_tien_tra_goc: Amount to pay off
+        
+    Returns:
+        True if successful, False if not found or error
+    """
+    try:
+        db_tin_chap = get_tin_chap(db, ma_hd)
+        if not db_tin_chap:
+            return False
+        db_tin_chap.SoTienTraGoc += so_tien_tra_goc
+        if db_tin_chap.SoTienTraGoc > db_tin_chap.SoTienVay:
+            # db_tin_chap.TrangThai = TrangThaiThanhToan.DA_TAT_TOAN.value
+            db_lich_su_tra_lai_tin_chap = db.query(LichSuTraLai).filter(LichSuTraLai.MaHD == ma_hd).all()
+            # Nếu tổng TienDaTra > SoTien thì thay đổi trạng thái thành DA_TAT_TOAN
+            if sum(ls.TienDaTra for ls in db_lich_su_tra_lai_tin_chap) > db_tin_chap.SoTienVay:
+                db_tin_chap.TrangThai = TrangThaiThanhToan.DA_TAT_TOAN.value
+            else:
+                db_tin_chap.TrangThai = TrangThaiThanhToan.THANH_TOAN_MOT_PHAN.value
+        db.commit()
+        db.refresh(db_tin_chap)
+        return True
+    except Exception as e:
+        db.rollback()
+        return False

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 
 from app.core.database import engine, Base
-from app.routers import tin_chap, tra_gop, lich_su_tra_lai
+from app.routers import tin_chap, tra_gop, lich_su_tra_lai, no_phai_thu
 
 # Configure logging for the application
 logging.basicConfig(
@@ -41,7 +41,7 @@ app.add_middleware(
 app.include_router(tin_chap.router)
 app.include_router(tra_gop.router)
 app.include_router(lich_su_tra_lai.router)
-
+app.include_router(no_phai_thu.router)
 
 # Startup event
 @app.on_event("startup")
@@ -63,7 +63,8 @@ async def root():
         "endpoints": {
             "TinChap": "/tin-chap",
             "TraGop": "/tra-gop",
-            "LichSuTraLai": "/lich-su-tra-lai"
+            "LichSuTraLai": "/lich-su-tra-lai",
+            "NoPhaiThu": "/no-phai-thu"
         },
         "docs": "/docs",
         "redoc": "/redoc"
